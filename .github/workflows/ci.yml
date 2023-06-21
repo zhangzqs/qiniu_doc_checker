@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ macos-latest, windows-latest, ubuntu-latest ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v1.2
+
+      # 安装依赖,测试环境
+      - name: Install dependencies
+        run: dart pub global activate stagehand
+
+      # 查看Dart版本
+      - name: Report version
+        run: dart --version
+
+      # 导入依赖
+      - name: Install dependencies
+        run: dart pub get
+
+      # 代码格式化
+      - name: Check formatting (using dev dartfmt release)
+        run: dart format --output=none --set-exit-if-changed .
+
+      # 编译二进制
+      - name: Compile
+        run: |
+          mkdir ${{ github.workspace }}/package
+          dart compile exe  bin/qiniu_doc_checker.dart -o ${{ github.workspace }}/output
+
+      # 上传成果物
+      - uses: actions/upload-artifact@v1
+        with:
+          name: qiniu_doc_checker_${{ runner.os }}
+          path: ${{ github.workspace }}/output
+        name: 'Upload File'

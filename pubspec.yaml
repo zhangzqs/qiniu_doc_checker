@@ -1,0 +1,22 @@
+name: qiniu_doc_checker
+description: A sample command-line application.
+version: 1.0.0
+
+environment:
+  sdk: ^3.0.1
+
+dependencies:
+  beautiful_soup_dart: ^0.3.0
+  crypto: ^3.0.3
+  dio: ^5.2.1+1
+  intl: ^0.18.1
+  logger: ^1.4.0
+  path: ^1.8.0
+  test: ^1.21.0
+  yaml: ^3.1.2
+
+
+dev_dependencies:
+  lints: ^2.0.0
+  build_runner: ^2.4.5
+
