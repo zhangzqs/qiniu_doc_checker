@@ -29,11 +29,11 @@ jobs:
       - name: Compile
         run: |
           mkdir ${{ github.workspace }}/package
-          dart compile exe  bin/qiniu_doc_checker.dart -o ${{ github.workspace }}/output
+          dart compile exe bin/qiniu_doc_checker.dart -o ${{ github.workspace }}/output/qiniu_doc_checker.exe
 
       # 上传成果物
       - uses: actions/upload-artifact@v1
         with:
           name: qiniu_doc_checker_${{ runner.os }}
-          path: ${{ github.workspace }}/output
+          path: ${{ github.workspace }}/output/qiniu_doc_checker.exe
         name: 'Upload File'
