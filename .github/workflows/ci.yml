@@ -28,7 +28,7 @@ jobs:
       # 编译二进制
       - name: Compile
         run: |
-          mkdir ${{ github.workspace }}/package
+          mkdir ${{ github.workspace }}/output
           dart compile exe bin/qiniu_doc_checker.dart -o ${{ github.workspace }}/output/qiniu_doc_checker.exe
 
       # 上传成果物
