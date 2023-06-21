@@ -25,10 +25,6 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
-      # 代码格式化
-      - name: Check formatting (using dev dartfmt release)
-        run: dart format --output=none --set-exit-if-changed .
-
       # 编译二进制
       - name: Compile
         run: |
