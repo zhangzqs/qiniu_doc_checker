@@ -14,12 +14,8 @@ jobs:
         os: [ macos-latest, windows-latest, ubuntu-latest ]
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: dart-lang/setup-dart@v1.2
-
-      # 安装依赖,测试环境
-      - name: Install dependencies
-        run: dart pub global activate stagehand
+      - uses: actions/checkout@v3
+      - uses: dart-lang/setup-dart@v1
 
       # 查看Dart版本
       - name: Report version
