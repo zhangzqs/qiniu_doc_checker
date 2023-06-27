@@ -28,6 +28,8 @@ jobs:
             Release Notes
 
   build_and_upload:
+    name: Build and Upload
+    needs: create_release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
