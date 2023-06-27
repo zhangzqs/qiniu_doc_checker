@@ -1,0 +1,63 @@
+name: Release qiniu-doc-checker
+
+on:
+  push:
+    tags:
+      - v*
+
+permissions: write-all
+
+jobs:
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release Draft
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+          body: |
+            Release Notes
+
+  build_and_upload:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ macos-latest, windows-latest, ubuntu-latest ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dart-lang/setup-dart@v1
+
+      # 查看Dart版本
+      - name: Report version
+        run: dart --version
+
+      # 导入依赖
+      - name: Install dependencies
+        run: dart pub get
+
+      # 编译二进制
+      - name: Compile
+        run: |
+          mkdir ${{ github.workspace }}/output
+          dart compile exe bin/qiniu_doc_checker.dart -o ${{ github.workspace }}/output/qiniu_doc_checker.exe
+
+      - name: Upload binary file to release draft
+        id: upload-release-assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/output/qiniu_doc_checker.exe
+          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ steps.set-version-by-tag.outputs.version }}.exe
+          asset_content_type: application/octet-stream
