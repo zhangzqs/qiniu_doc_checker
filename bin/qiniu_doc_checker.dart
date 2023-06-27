@@ -5,11 +5,27 @@ import 'package:qiniu_doc_checker/logger.dart';
 import 'package:qiniu_doc_checker/qiniu_doc_checker.dart';
 
 Future<void> main(List<String> arguments) async {
-  if (arguments.isEmpty) {
-    print('Usage: qiniu_doc_checker <yaml_config_file>');
-    exit(1);
-  }
-  String yamlConfigFile = arguments[0];
+  String yamlConfigFile = await () async {
+    if (arguments.isEmpty) {
+      List<String> yamlFilePaths = await Directory.current
+          .list(recursive: false)
+          .where((e) => e.path.endsWith('.yaml'))
+          .map((e) => e.path)
+          .toList();
+      if (yamlFilePaths.length == 1) {
+        return yamlFilePaths.first;
+      } else {
+        if (yamlFilePaths.length > 1) {
+          print('too many yaml files found: $yamlFilePaths');
+        } else {
+          print('Usage: qiniu_doc_checker <yaml_config_file>');
+        }
+        exit(1);
+      }
+    } else {
+      return arguments[0];
+    }
+  }();
 
   print('yamlConfigFile: $yamlConfigFile');
 

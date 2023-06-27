@@ -2,14 +2,14 @@ import 'package:intl/intl.dart';
 
 var logger = Logger();
 
-class _LogItem {
+class LogItem {
   final DateTime time = DateTime.now();
   final String level;
   final dynamic message;
   final dynamic error;
   final StackTrace stackTrace;
 
-  _LogItem(this.level, this.message, this.error, this.stackTrace);
+  LogItem(this.level, this.message, this.error, this.stackTrace);
 
   String _toColorStringByLevel(String s) {
     return {
@@ -33,36 +33,37 @@ class _LogItem {
       sb.write(error);
     }
     sb.write(' ');
-    sb.write(stackTrace.toString().split('\n')[1]);
+    final stackInfo = stackTrace.toString().split('\n')[1];
+    sb.write(_toColorStringByLevel(stackInfo));
     return sb.toString();
   }
 }
 
 class Logger {
-  final List<_LogItem> _logItems = [];
+  final List<LogItem> _logItems = [];
 
-  List<_LogItem> get logItems => List.unmodifiable(_logItems);
+  List<LogItem> get logItems => List.unmodifiable(_logItems);
 
   void d(dynamic e) {
-    final log = _LogItem('DEBUG', e, null, StackTrace.current);
+    final log = LogItem('DEBUG', e, null, StackTrace.current);
     _logItems.add(log);
     print(log);
   }
 
   void i(dynamic e) {
-    final log = _LogItem('INFO', e, null, StackTrace.current);
+    final log = LogItem('INFO', e, null, StackTrace.current);
     _logItems.add(log);
     print(log);
   }
 
   void e(dynamic e) {
-    final log = _LogItem('ERROR', e, null, StackTrace.current);
+    final log = LogItem('ERROR', e, null, StackTrace.current);
     _logItems.add(log);
     print(log);
   }
 
   void w(dynamic e) {
-    final log = _LogItem('WARN', e, null, StackTrace.current);
+    final log = LogItem('WARN', e, null, StackTrace.current);
     _logItems.add(log);
     print(log);
   }
