@@ -30,10 +30,10 @@ jobs:
   build_and_upload:
     name: Build and Upload
     needs: create_release
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: [ macos-latest, windows-latest, ubuntu-latest ]
+        os: [ macos, windows, ubuntu ]
 
     steps:
       - uses: actions/checkout@v3
@@ -53,10 +53,26 @@ jobs:
 
       # 编译二进制
       - name: Compile
+        if: matrix.os == 'windows'
         run: |
-          mkdir output
           dart compile exe bin/qiniu_doc_checker.dart -o qiniu_doc_checker.exe
-          zip qiniu_doc_checker.zip qiniu_doc_checker.exe
+
+      - uses: vimtor/action-zip@v1
+        if: matrix.os == 'windows'
+        with:
+          files: qiniu_doc_checker.exe
+          dest: qiniu_doc_checker.zip
+
+      - name: Compile
+        if: matrix.os != 'windows'
+        run: |
+          dart compile exe bin/qiniu_doc_checker.dart -o qiniu_doc_checker
+
+      - uses: vimtor/action-zip@v1
+        if: matrix.os != 'windows'
+        with:
+          files: qiniu_doc_checker
+          dest: qiniu_doc_checker.zip
 
       - name: Upload binary file to release draft
         id: upload-release-assets
