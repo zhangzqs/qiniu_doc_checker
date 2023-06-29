@@ -60,7 +60,7 @@ jobs:
       - uses: vimtor/action-zip@v1
         if: matrix.os == 'windows'
         with:
-          files: qiniu_doc_checker.exe
+          files: qiniu_doc_checker.exe config.yaml
           dest: qiniu_doc_checker.zip
 
       - name: Compile
@@ -71,7 +71,7 @@ jobs:
       - uses: vimtor/action-zip@v1
         if: matrix.os != 'windows'
         with:
-          files: qiniu_doc_checker
+          files: qiniu_doc_checker config.yaml
           dest: qiniu_doc_checker.zip
 
       - name: Upload binary file to release draft
