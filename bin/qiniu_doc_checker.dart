@@ -1,10 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:intl/intl.dart';
 import 'package:qiniu_doc_checker/config.dart';
 import 'package:qiniu_doc_checker/logger.dart';
 import 'package:qiniu_doc_checker/qiniu_doc_checker.dart';
 
-Future<void> main(List<String> arguments) async {
+Future<int> _run(List<String> arguments) async {
   String yamlConfigFile = await () async {
     if (arguments.isEmpty) {
       List<String> yamlFilePaths = await Directory.current
@@ -39,12 +41,46 @@ Future<void> main(List<String> arguments) async {
 
   if (errorLogs.isNotEmpty) {
     logger.e('\x1B[31m Some Error: \x1B[0m');
-    for (var log in errorLogs) {
-      print(log);
-    }
-    exit(1);
+    print('${errorLogs.join('\n')}\n');
+    return 1;
   } else {
     logger.i('\x1B[32m All check passed! \x1B[0m');
-    exit(0);
+    return 0;
+  }
+}
+
+Future<void> _writeAllPrintToLogFile(Iterable<String> printRecords) async {
+  final logDirPath = '${Directory.current.path}/logs';
+  await Directory(logDirPath).create(recursive: true);
+
+  final logFile = File(
+    '$logDirPath/qiniu_doc_checker_${DateFormat("yyyy-MM-dd_HH-mm-ss").format(DateTime.now())}.log',
+  );
+
+  await logFile.writeAsString(printRecords.join('\n'), mode: FileMode.append);
+  print('log file has been saved to ${logFile.path}');
+}
+
+Future<void> main(List<String> arguments) async {
+  List<String> printRecords = [];
+  final result = await runZonedGuarded(
+    () => _run(arguments),
+    (e, stackTrace) async {
+      print(e);
+      print(stackTrace);
+      printRecords.addAll([e.toString(), stackTrace.toString()]);
+      await _writeAllPrintToLogFile(printRecords);
+      exit(-1);
+    },
+    zoneSpecification: ZoneSpecification(
+      print: (self, parent, zone, line) {
+        parent.print(zone, line);
+        printRecords.add(line);
+      },
+    ),
+  );
+  await _writeAllPrintToLogFile(printRecords);
+  if (result != 0) {
+    exit(result!);
   }
 }

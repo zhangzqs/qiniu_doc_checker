@@ -1,15 +1,18 @@
 import 'package:intl/intl.dart';
 
-var logger = Logger();
+var logger = Logger(
+  logRecorder: (logItem) {
+    print(logItem);
+  },
+);
 
 class LogItem {
   final DateTime time = DateTime.now();
   final String level;
   final dynamic message;
-  final dynamic error;
   final StackTrace stackTrace;
 
-  LogItem(this.level, this.message, this.error, this.stackTrace);
+  LogItem(this.level, this.message, this.stackTrace);
 
   String _toColorStringByLevel(String s) {
     return {
@@ -28,10 +31,6 @@ class LogItem {
     sb.write(_toColorStringByLevel("[$level]"));
     sb.write(' ');
     sb.write(message);
-    if (error != null) {
-      sb.write(' ');
-      sb.write(error);
-    }
     sb.write(' ');
     final stackInfo = stackTrace.toString().split('\n')[1];
     sb.write(_toColorStringByLevel(stackInfo));
@@ -41,30 +40,26 @@ class LogItem {
 
 class Logger {
   final List<LogItem> _logItems = [];
+  final void Function(LogItem)? _logRecorder;
+
+  Logger({
+    void Function(LogItem)? logRecorder,
+  }) : _logRecorder = logRecorder ?? print;
 
   List<LogItem> get logItems => List.unmodifiable(_logItems);
 
-  void d(dynamic e) {
-    final log = LogItem('DEBUG', e, null, StackTrace.current);
+  LogItem _log(String level, dynamic e, StackTrace stackTrace) {
+    final log = LogItem(level, e, stackTrace);
     _logItems.add(log);
-    print(log);
+    _logRecorder?.call(log);
+    return log;
   }
 
-  void i(dynamic e) {
-    final log = LogItem('INFO', e, null, StackTrace.current);
-    _logItems.add(log);
-    print(log);
-  }
+  LogItem d(dynamic e) => _log('DEBUG', e, StackTrace.current);
 
-  void e(dynamic e) {
-    final log = LogItem('ERROR', e, null, StackTrace.current);
-    _logItems.add(log);
-    print(log);
-  }
+  LogItem i(dynamic e) => _log('INFO', e, StackTrace.current);
 
-  void w(dynamic e) {
-    final log = LogItem('WARN', e, null, StackTrace.current);
-    _logItems.add(log);
-    print(log);
-  }
+  LogItem e(dynamic e) => _log('ERROR', e, StackTrace.current);
+
+  LogItem w(dynamic e) => _log('WARN', e, StackTrace.current);
 }
