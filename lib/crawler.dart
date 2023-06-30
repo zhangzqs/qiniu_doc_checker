@@ -121,7 +121,7 @@ class WebPageCrawler {
       final urlArchitecture = Architecture.parse(url);
 
       if ([supportedPlatform, urlPlatform].contains(Platform.unknown)) {
-        logger.w('Platform unknown with { platform: $platform, url: $url }');
+        logger.e('Platform unknown on doc describe with { platform: $platform, url: $url }');
       } else {
         if (supportedPlatform != urlPlatform) {
           throw Exception(
@@ -130,7 +130,7 @@ class WebPageCrawler {
       }
 
       if ([supportedArchitecture, urlArchitecture].contains(Architecture.unknown)) {
-        logger.w('Architecture unknown with { platform: $platform, url: $url }');
+        logger.e('Architecture unknown no doc describe with { platform: $platform, url: $url }');
       } else {
         if (supportedArchitecture != urlArchitecture) {
           throw Exception(
