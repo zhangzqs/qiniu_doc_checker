@@ -7,3 +7,5 @@
 workdir/
 
 qiniu_doc_checker
+
+logs/

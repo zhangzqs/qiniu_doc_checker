@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:qiniu_doc_checker/logger.dart';
+import 'package:qiniu_doc_checker/util.dart';
 
 typedef ProgressCallback = void Function(int count, int total);
 
@@ -40,14 +41,19 @@ class FileDownloader {
     }
 
     logger.d('Downloading $url to $cacheDir');
-    final headResp = await dio.head(url);
-    final etag = headResp.headers['Etag']?.firstOrNull?.replaceAll('"', '');
+    final resp = await dio.get<ResponseBody>(
+      url,
+      options: Options(
+        responseType: ResponseType.stream,
+      ),
+    );
+    final etag = resp.headers['Etag']?.firstOrNull?.replaceAll('"', '');
     logger.d('Etag: $etag');
     if (etag == null) {
       throw Exception('Etag is null');
     }
 
-    final contentType = headResp.headers['Content-Type']?.firstOrNull;
+    final contentType = resp.headers['Content-Type']?.firstOrNull;
     logger.d('Content-Type: $contentType');
     if (contentType == null) {
       throw Exception('Content-Type is null');
@@ -61,8 +67,8 @@ class FileDownloader {
       logger.d('File $targetPath exists, skipping download');
       return File(targetPath);
     } else {
-      await dio.download(
-        url,
+      await saveResponseBodyToFile(
+        resp,
         targetPath,
         onReceiveProgress: onReceiveProgress,
       );

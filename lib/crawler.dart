@@ -63,8 +63,13 @@ class WebPageCrawler {
       } else {
         logger.d('Cache dir $cacheDir exists');
       }
-      final headResp = await dio.head(url);
-      final saveTime = headResp.headers['X-Swift-Savetime']?.firstOrNull;
+      final resp = await dio.get<ResponseBody>(
+        url,
+        options: Options(
+          responseType: ResponseType.stream,
+        ),
+      );
+      final saveTime = resp.headers['X-Swift-Savetime']?.firstOrNull;
       logger.d('X-Swift-Savetime: $saveTime');
       if (saveTime == null) {
         throw Exception('X-Swift-Savetime is null');
@@ -73,16 +78,16 @@ class WebPageCrawler {
       final hashData = "$url#salt#$saveTime";
       final digest = md5.convert(utf8.encode(hashData));
       final hash = digest.toString();
-
-      if (await File('$cacheDir/$hash.html').exists()) {
+      final file = File('$cacheDir/$hash.html');
+      if (await file.exists()) {
         logger.d('Cache file $cacheDir/$hash.html exists');
-        return await File('$cacheDir/$hash.html').readAsString();
+        return await file.readAsString();
       } else {
         logger.d('Cache file $cacheDir/$hash.html does not exist, downloading...');
-        final resp = await dio.get(url);
-        String html = resp.data;
-        await File('$cacheDir/$hash.html').writeAsString(html);
-        return html;
+        await for (final bs in resp.data!.stream) {
+          await file.writeAsBytes(bs, mode: FileMode.writeOnlyAppend);
+        }
+        return await file.readAsString();
       }
     }
   }
