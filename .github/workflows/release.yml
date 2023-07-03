@@ -73,6 +73,7 @@ jobs:
           tar -czvf qiniu_doc_checker.tar.gz qiniu_doc_checker config.yaml
 
       - name: Upload binary file to release draft
+        if: matrix.os == 'windows'
         id: upload-release-assets
         uses: actions/upload-release-asset@v1
         env:
@@ -81,4 +82,28 @@ jobs:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: qiniu_doc_checker.zip
           asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ steps.set-version-by-tag.outputs.version }}.zip
+          asset_content_type: application/octet-stream
+
+      - name: Upload binary file to release draft
+        if: matrix.os == 'ubuntu'
+        id: upload-release-assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: qiniu_doc_checker.tar.gz
+          asset_name: qiniu_doc_checker-linux-${{ steps.set-version-by-tag.outputs.version }}.tar.gz
+          asset_content_type: application/octet-stream
+
+      - name: Upload binary file to release draft
+        if: matrix.os == 'macos'
+        id: upload-release-assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: qiniu_doc_checker.tar.gz
+          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ steps.set-version-by-tag.outputs.version }}.tar.gz
           asset_content_type: application/octet-stream
