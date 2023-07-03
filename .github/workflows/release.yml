@@ -40,7 +40,6 @@ jobs:
       - uses: dart-lang/setup-dart@v1
 
       - name: Set version by tag
-        id: set-version-by-tag
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       # 查看Dart版本
@@ -80,7 +79,7 @@ jobs:
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: qiniu_doc_checker.zip
-          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ steps.set-version-by-tag.outputs.version }}.zip
+          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ env.version }}.zip
           asset_content_type: application/octet-stream
 
       - name: Upload binary file to release draft
@@ -91,7 +90,7 @@ jobs:
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: qiniu_doc_checker.tar.gz
-          asset_name: qiniu_doc_checker-linux-${{ steps.set-version-by-tag.outputs.version }}.tar.gz
+          asset_name: qiniu_doc_checker-linux-${{ env.version }}.tar.gz
           asset_content_type: application/octet-stream
 
       - name: Upload binary file to release draft
@@ -102,5 +101,5 @@ jobs:
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: qiniu_doc_checker.tar.gz
-          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ steps.set-version-by-tag.outputs.version }}.tar.gz
+          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ env.version }}.tar.gz
           asset_content_type: application/octet-stream
