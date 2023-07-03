@@ -34,4 +34,4 @@ jobs:
 
       # 运行二进制
       - name: Run
-        run: qiniu_doc_checker.exe config.yaml
+        run: ./qiniu_doc_checker.exe config.yaml
