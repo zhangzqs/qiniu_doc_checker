@@ -43,6 +43,11 @@ jobs:
       - name: Report version
         run: dart --version
 
+      # 获取当前标签
+      - name: Get tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-current-tag
+
       # 导入依赖
       - name: Install dependencies
         run: dart pub get
@@ -76,7 +81,7 @@ jobs:
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: qiniu_doc_checker.zip
-          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ github.ref }}.zip
+          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ steps.get-current-tag.outputs.tag }}.zip
           asset_content_type: application/octet-stream
 
       - name: Upload binary file to release draft
@@ -87,7 +92,7 @@ jobs:
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: qiniu_doc_checker.tar.gz
-          asset_name: qiniu_doc_checker-linux-${{ github.ref }}.tar.gz
+          asset_name: qiniu_doc_checker-linux-${{ steps.get-current-tag.outputs.tag }}.tar.gz
           asset_content_type: application/octet-stream
 
       - name: Upload binary file to release draft
@@ -98,5 +103,5 @@ jobs:
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: qiniu_doc_checker.tar.gz
-          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ github.ref }}.tar.gz
+          asset_name: qiniu_doc_checker-${{ matrix.os }}-${{ steps.get-current-tag.outputs.tag }}.tar.gz
           asset_content_type: application/octet-stream
