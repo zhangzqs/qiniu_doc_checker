@@ -41,7 +41,7 @@ jobs:
 
       - name: Set version by tag
         id: set-version-by-tag
-        run: echo ::set-output name=version::${GITHUB_REF#refs/tags/v}
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       # 查看Dart版本
       - name: Report version
@@ -51,7 +51,6 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
-      # 编译二进制
       - name: Compile
         if: matrix.os == 'windows'
         run: |
@@ -68,11 +67,10 @@ jobs:
         run: |
           dart compile exe bin/qiniu_doc_checker.dart -o qiniu_doc_checker
 
-      - uses: vimtor/action-zip@v1
+      - name: Compress binary file
         if: matrix.os != 'windows'
-        with:
-          files: qiniu_doc_checker config.yaml
-          dest: qiniu_doc_checker.zip
+        run: |
+          tar -czvf qiniu_doc_checker.tar.gz qiniu_doc_checker config.yaml
 
       - name: Upload binary file to release draft
         id: upload-release-assets
