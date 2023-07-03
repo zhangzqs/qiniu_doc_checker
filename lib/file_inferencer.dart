@@ -9,9 +9,9 @@ abstract class AFileTypeInferencer {
 
   AFileTypeInferencer(this.file) {
     if (!file.existsSync()) {
-      throw Exception('File not exists: ${file.path}');
+      throw Exception('文件不存在: ${file.path}');
     }
-    logger.d('File type infer: ${file.absolute.path}');
+    logger.d('准备推断文件: ${file.absolute.path} 的类型');
   }
 
   /// Infer file architecture
@@ -112,7 +112,7 @@ class CompressedFileTypeInferencer extends AFileTypeInferencer {
       await outputDir.create(recursive: true);
       ProcessResult result = await Process.run('unzip', [file.absolute.path, '-d', outputDir.absolute.path]);
       if (result.exitCode != 0) {
-        throw Exception('unzip failed: ${result.stderr}');
+        throw Exception('unzip 命令执行失败: ${result.stderr}');
       }
     }
   }
@@ -122,16 +122,16 @@ class CompressedFileTypeInferencer extends AFileTypeInferencer {
       await outputDir.create(recursive: true);
       ProcessResult result = await Process.run('tar', ['-zxvf', file.absolute.path, '-C', outputDir.absolute.path]);
       if (result.exitCode != 0) {
-        throw Exception('tar failed: ${result.stderr}');
+        throw Exception('tar 命令执行失败: ${result.stderr}');
       }
     }
   }
 
   Future<void> init() async {
     if (!await file.exists()) {
-      throw Exception('File not exists: ${file.path}');
+      throw Exception('找不到文件: ${file.path}');
     }
-    logger.d('File type infer: ${file.absolute.path}');
+    logger.d('准备解压文件: ${file.absolute.path}');
     if (await _isZipFile()) {
       await _initByZip();
     } else if (await _isTarGzFile()) {

@@ -21,26 +21,28 @@ class FileDownloader {
     ProgressCallback? onReceiveProgress,
   }) async {
     if (!await Directory(cacheDir).exists()) {
-      logger.d('Cache cacheDir $cacheDir does not exist, creating...');
+      logger.d('缓存文件夹 $cacheDir 不存在，创建中...');
       await Directory(cacheDir).create(recursive: true);
     } else {
-      logger.d('Cache cacheDir $cacheDir exists');
+      logger.d('缓存文件夹 $cacheDir 已存在');
     }
 
+    // 对于 kodo-toolbox-new.qiniu.com 的下载链接，需要添加 ref 和 s_path 参数
     if (referer != null) {
       Uri uri = Uri.parse(url);
       if (uri.host == 'kodo-toolbox-new.qiniu.com') {
         Uri ref = Uri.parse(referer);
-        final map = {
-          'ref': ref.host,
-          's_path': ref.path,
-        };
-        map.addAll(uri.queryParameters);
-        url = uri.replace(queryParameters: map).toString();
+        url = uri.replace(
+          queryParameters: {
+            'ref': ref.host,
+            's_path': ref.path,
+            ...uri.queryParameters,
+          },
+        ).toString();
       }
     }
 
-    logger.d('Downloading $url to $cacheDir');
+    logger.d('正在下载 $url 到文件夹 $cacheDir');
     final resp = await dio.get<ResponseBody>(
       url,
       options: Options(
@@ -58,20 +60,18 @@ class FileDownloader {
     if (contentType == null) {
       throw Exception('Content-Type is null');
     }
-    if (contentType != 'application/zip' && contentType != 'application/x-compressed') {
-      throw Exception('Content-Type is not application/zip or application/x-compressed');
+
+    final supportedContentTypes = ['application/zip', 'application/x-compressed'];
+    if (!supportedContentTypes.contains(contentType)) {
+      throw Exception('当前仅支持下载的 Content-Type 为 $supportedContentTypes 的文件，当前 Content-Type 为 $contentType');
     }
 
     final targetPath = '$cacheDir/$etag.zip';
     if (await File(targetPath).exists()) {
-      logger.d('File $targetPath exists, skipping download');
+      logger.d('文件 $targetPath 已存在，跳过下载');
       return File(targetPath);
     } else {
-      await saveResponseBodyToFile(
-        resp,
-        targetPath,
-        onReceiveProgress: onReceiveProgress,
-      );
+      await saveResponseBodyToFile(resp, targetPath, onReceiveProgress: onReceiveProgress);
       return File(targetPath);
     }
   }

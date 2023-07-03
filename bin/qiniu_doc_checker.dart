@@ -29,22 +29,23 @@ Future<int> _run(List<String> arguments) async {
     }
   }();
 
-  print('yamlConfigFile: $yamlConfigFile');
+  logger.i('使用配置文件: $yamlConfigFile');
 
   final config = await QiniuDocumentCheckerConfiguration.fromYaml(yamlConfigFile);
+  logger.level = config.logger.level;
+  logger.showStackTrace = config.logger.showStackTrace;
 
   await QiniuDocumentsChecker(config).check();
 
-  final errorLogs = logger.logItems.where((e) {
-    return e.level == 'ERROR';
-  }).toList();
+  final errorLogs = logger.logItems.where((e) => e.level == LogLevel.error).toList();
 
   if (errorLogs.isNotEmpty) {
-    logger.e('\x1B[31m Some Error: \x1B[0m');
+    print('\x1B[31m Some Errors: \x1B[0m');
     print('${errorLogs.join('\n')}\n');
     return 1;
   } else {
-    logger.i('\x1B[32m All check passed! \x1B[0m');
+    logger.level = LogLevel.info;
+    logger.i('\x1B[32m 所有文档检查均成功通过！！！ \x1B[0m');
     return 0;
   }
 }
@@ -58,7 +59,7 @@ Future<void> _writeAllPrintToLogFile(Iterable<String> printRecords) async {
   );
 
   await logFile.writeAsString(printRecords.join('\n'), mode: FileMode.append);
-  print('log file has been saved to ${logFile.path}');
+  print('日志文件已保存： ${logFile.path}');
 }
 
 Future<void> main(List<String> arguments) async {
@@ -80,7 +81,5 @@ Future<void> main(List<String> arguments) async {
     ),
   );
   await _writeAllPrintToLogFile(printRecords);
-  if (result != 0) {
-    exit(result!);
-  }
+  exit(result!);
 }

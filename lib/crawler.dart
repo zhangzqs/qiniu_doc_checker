@@ -23,7 +23,7 @@ class DownloadItem {
 
   @override
   String toString() {
-    return 'DownloadItem { platform: $supportedPlatform, architecture: $supportedArchitecture, url: $downloadUrl }';
+    return '下载项 { 原始页面信息: $sourceInfo, 目标平台系统: $supportedPlatform, 目标平台架构: $supportedArchitecture, 目标下载链接: $downloadUrl }';
   }
 }
 
@@ -36,7 +36,13 @@ class DownloadTable {
 
   @override
   String toString() {
-    return 'DownloadTable { items: $items }';
+    final sb = StringBuffer();
+    sb.writeln('下载表 {\n总长度: ${items.length},\n');
+    for (var item in items) {
+      sb.writeln('  $item, \n');
+    }
+    sb.writeln('}');
+    return sb.toString();
   }
 }
 
@@ -58,10 +64,10 @@ class WebPageCrawler {
       return html;
     } else {
       if (!await Directory(cacheDir!).exists()) {
-        logger.d('Cache dir $cacheDir does not exist, creating...');
+        logger.d('缓存文件夹 $cacheDir 不存在，创建中...');
         await Directory(cacheDir!).create(recursive: true);
       } else {
-        logger.d('Cache dir $cacheDir exists');
+        logger.d('缓存文件夹 $cacheDir 已存在，跳过创建');
       }
       final resp = await dio.get<ResponseBody>(
         url,
@@ -80,10 +86,10 @@ class WebPageCrawler {
       final hash = digest.toString();
       final file = File('$cacheDir/$hash.html');
       if (await file.exists()) {
-        logger.d('Cache file $cacheDir/$hash.html exists');
+        logger.d('缓存文件 $cacheDir/$hash.html 已存在，跳过下载');
         return await file.readAsString();
       } else {
-        logger.d('Cache file $cacheDir/$hash.html does not exist, downloading...');
+        logger.d('缓存文件 $cacheDir/$hash.html 不存在，下载中...');
         await for (final bs in resp.data!.stream) {
           await file.writeAsBytes(bs, mode: FileMode.writeOnlyAppend);
         }
@@ -99,43 +105,55 @@ class WebPageCrawler {
       return element.text.contains('下载') && element.text.contains('链接') && element.text.contains('平台');
     }).toList();
     if (tbs.isEmpty) {
-      throw Exception('No download table found');
+      throw Exception('找不到下载表');
     }
-    logger.d('Download table found');
+    logger.d('成功找到下载表');
 
     Bs4Element table = tbs.first;
     // 跳过表头
     List<Bs4Element> trs = table.findAll('tr').skip(1).toList();
-    logger.d('Download table rows: ${trs.length}');
+    logger.d('下载表共有 ${trs.length} 项待下载');
 
     final items = trs.map((Bs4Element e) {
       final tds = e.findAll('td');
       final platform = tds[0].text;
       final url = tds[1].find('a')?.attributes['href'];
       if (url == null) {
-        throw Exception('Download url not found with { platform: $platform }');
+        throw Exception('找不到下载链接，原始下载项信息为: $tds');
       }
       final supportedPlatform = Platform.parse(platform);
-      final supportedArchitecture = Architecture.parse(platform);
-      final urlPlatform = Platform.parse(url);
-      final urlArchitecture = Architecture.parse(url);
-
-      if ([supportedPlatform, urlPlatform].contains(Platform.unknown)) {
-        logger.e('Platform unknown on doc describe with { platform: $platform, url: $url }');
-      } else {
-        if (supportedPlatform != urlPlatform) {
-          throw Exception(
-              'Platform not match with { platform: $supportedPlatform, url: $urlPlatform, sourcePlatform: $platform, sourceUrl: $url }');
+      if (supportedPlatform == Platform.unknown) {
+        logger.w('文档描述中的平台未知，原始下载项信息为: $tds');
+      }
+      final supportedArchitecture = () {
+        final r = Architecture.parse(platform);
+        if (r == Architecture.unknown) {
+          logger.w('文档描述中的架构未知，默认设为amd64，原始下载项信息为: $tds');
+          return Architecture.amd64;
+        } else {
+          return r;
         }
+      }();
+      final urlPlatform = Platform.parse(Uri.decodeComponent(url.split('/').last));
+      if (urlPlatform == Platform.unknown) {
+        logger.w('下载链接中的平台未知，原始下载项信息为: $tds');
+      }
+      final urlArchitecture = () {
+        final r = Architecture.parse(url);
+        if (r == Architecture.unknown) {
+          logger.w('下载链接中的架构未知，默认设为amd64，原始下载项信息为: $tds');
+          return Architecture.amd64;
+        } else {
+          return r;
+        }
+      }();
+
+      if (supportedPlatform != urlPlatform) {
+        logger.e('文档中描述的平台 $supportedPlatform 与下载链接中的平台 $urlPlatform 不匹配，原始下载项信息为: $tds');
       }
 
-      if ([supportedArchitecture, urlArchitecture].contains(Architecture.unknown)) {
-        logger.e('Architecture unknown no doc describe with { platform: $platform, url: $url }');
-      } else {
-        if (supportedArchitecture != urlArchitecture) {
-          throw Exception(
-              'Architecture not match with { architecture: $supportedArchitecture, url: $urlArchitecture, sourcePlatform: $platform, sourceUrl: $url }');
-        }
+      if (supportedArchitecture != urlArchitecture) {
+        logger.e('文档中描述的架构 $supportedArchitecture 与下载链接中的架构 $urlArchitecture 不匹配，原始下载项信息为: $tds');
       }
 
       return DownloadItem(

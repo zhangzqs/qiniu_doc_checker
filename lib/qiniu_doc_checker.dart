@@ -63,48 +63,48 @@ class QiniuDocumentChecker {
 
   Future<void> check() async {
     if (!await Directory(workingDirectory).exists()) {
-      logger.d('Cache workingDirectory $workingDirectory does not exist, creating...');
+      logger.d('工作目录 $workingDirectory 不存在，创建中...');
       await Directory(workingDirectory).create(recursive: true);
     } else {
-      logger.d('Cache workingDirectory $workingDirectory exists');
+      logger.d('工作目录 $workingDirectory 已存在');
     }
-    logger.i('Checking $documentUrl');
+    logger.i('准备检查文档页面： $documentUrl');
     DownloadTable table = await crawler.getDownloadTable();
-    logger.i('Found ${table.items.length} items');
-    for (final item in table.items) {
-      logger.i('Checking ${item.downloadUrl}');
+    logger.i('找到下载项 ${table.items.length} 个');
+    for (final (i, item) in table.items.indexed) {
+      logger.i('正在检查第${i + 1}项，下载链接：${item.downloadUrl}');
       File file = await downloader.download(
         url: item.downloadUrl,
         referer: documentUrl,
       );
-      logger.i('Downloaded ${file.path}');
+      logger.i('下载完毕，文件路径：${file.path}');
       AFileTypeInferencer inferencer = await buildFileTypeInferencer(file);
       final arch = await inferencer.getArchitecture();
       final platform = await inferencer.getPlatform();
-      logger.i('arch: $arch, platform: $platform');
+      logger.i('推断出的文件架构：$arch，推断出的文件平台：$platform');
 
       if (arch == Architecture.unknown) {
-        logger.e('cannot infer file arch: ${file.path}');
+        logger.e('无法推断文件架构：${file.path}');
         return;
       }
       if (platform == Platform.unknown) {
-        logger.e('cannot infer file platform: ${file.path}');
+        logger.e('无法推断文件平台：${file.path}');
         return;
       }
       if (item.supportedArchitecture == Architecture.unknown) {
-        logger.e('cannot infer doc arch: $item');
+        logger.e('无法推断文档描述架构：$item');
         return;
       }
       if (item.supportedPlatform == Platform.unknown) {
-        logger.e('cannot infer doc platform: $item');
+        logger.e('无法推断文档描述平台：$item');
         return;
       }
 
       if (arch != item.supportedArchitecture) {
-        throw Exception('arch not match, file: $arch, but doc: $item');
+        throw Exception('架构不匹配, 文件内容架构为: $arch, 但是文档描述为: $item');
       }
       if (platform != item.supportedPlatform) {
-        throw Exception('platform not match, file: $platform, but doc: $item');
+        throw Exception('平台不匹配, 文件内容平台为: $platform, 但是文档描述为: $item');
       }
     }
   }
