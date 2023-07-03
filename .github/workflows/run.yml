@@ -1,0 +1,37 @@
+name: Run qiniu-doc-checker
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Run Platform'
+        required: true
+        default: 'ubuntu-latest'
+        options:
+          - 'ubuntu-latest'
+          - 'macos-latest'
+          - 'windows-latest'
+
+jobs:
+  build_and_run:
+    runs-on: ${{ github.event.inputs.platform }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dart-lang/setup-dart@v1
+
+      # 查看Dart版本
+      - name: Report version
+        run: dart --version
+
+      # 导入依赖
+      - name: Install dependencies
+        run: dart pub get
+
+      # 编译二进制
+      - name: Compile
+        run: dart compile exe bin/qiniu_doc_checker.dart -o qiniu_doc_checker.exe
+
+      # 运行二进制
+      - name: Run
+        run: qiniu_doc_checker.exe config.yaml
