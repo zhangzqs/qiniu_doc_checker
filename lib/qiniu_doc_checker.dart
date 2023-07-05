@@ -9,17 +9,61 @@ import 'package:qiniu_doc_checker/file_inferencer.dart';
 import 'crawler.dart';
 import 'logger.dart';
 
+typedef AfterInferencerCallback = void Function({
+  required String downloadUrl,
+  required String inferOutput,
+  required Architecture arch,
+  required Platform platform,
+});
+
+typedef AfterDownloadCallback = void Function({
+  required String downloadOutput,
+});
+
 class QiniuDocumentsChecker {
   final QiniuDocumentCheckerConfiguration config;
+  final Map<String, AfterInferencerCallback> afterInferencerCallbackMap;
+  final Map<String, AfterDownloadCallback> afterDownloadCallbackMap;
 
-  QiniuDocumentsChecker(this.config);
+  QiniuDocumentsChecker({
+    required this.config,
+    this.afterInferencerCallbackMap = const {},
+    this.afterDownloadCallbackMap = const {},
+  });
 
   Future<void> check() async {
-    for (var url in config.urlList) {
+    for (final document in config.documentList) {
+      logger.i('开始检查文档 ${document.name}');
       final checker = QiniuDocumentChecker(
         workingDirectory: config.workingDirectory,
-        documentUrl: url,
+        documentUrl: document.url,
         userAgent: config.userAgent,
+        afterDownload: ({required String downloadOutput}) {
+          for (final checkerName in document.afterDownloadCheckers) {
+            final callback = afterDownloadCallbackMap[checkerName];
+            if (callback != null) {
+              callback(downloadOutput: downloadOutput);
+            }
+          }
+        },
+        afterInferencer: ({
+          required String downloadUrl,
+          required String inferOutput,
+          required Architecture arch,
+          required Platform platform,
+        }) {
+          for (final checkerName in document.afterInferencerCheckers) {
+            final callback = afterInferencerCallbackMap[checkerName];
+            if (callback != null) {
+              callback(
+                downloadUrl: downloadUrl,
+                inferOutput: inferOutput,
+                arch: arch,
+                platform: platform,
+              );
+            }
+          }
+        },
       );
       await checker.check();
     }
@@ -30,11 +74,15 @@ class QiniuDocumentChecker {
   final String workingDirectory;
   final String documentUrl;
   final String? userAgent;
+  final AfterDownloadCallback? afterDownload;
+  final AfterInferencerCallback? afterInferencer;
 
   QiniuDocumentChecker({
     required this.workingDirectory,
     required this.documentUrl,
     this.userAgent,
+    this.afterDownload,
+    this.afterInferencer,
   });
 
   late final downloader = FileDownloader(
@@ -81,6 +129,7 @@ class QiniuDocumentChecker {
       AFileTypeInferencer inferencer = await buildFileTypeInferencer(file);
       final arch = await inferencer.getArchitecture();
       final platform = await inferencer.getPlatform();
+      final inferOutput = await inferencer.getOutputDirectory();
       logger.i('推断出的文件架构：$arch，推断出的文件平台：$platform');
 
       if (arch == Architecture.unknown) {
@@ -106,6 +155,13 @@ class QiniuDocumentChecker {
       if (platform != item.supportedPlatform) {
         throw Exception('平台不匹配, 文件内容平台为: $platform, 但是文档描述为: $item');
       }
+
+      afterInferencer?.call(
+        downloadUrl: item.downloadUrl,
+        inferOutput: inferOutput,
+        arch: arch,
+        platform: platform,
+      );
     }
   }
 }

@@ -19,6 +19,9 @@ abstract class AFileTypeInferencer {
 
   /// Infer file platform
   Future<Platform> getPlatform();
+
+  /// Get output directory
+  Future<String> getOutputDirectory();
 }
 
 /// File type inferencer
@@ -77,6 +80,11 @@ class FileTypeInferencer extends AFileTypeInferencer {
     } else {
       return Platform.unknown;
     }
+  }
+
+  @override
+  Future<String> getOutputDirectory() {
+    throw UnimplementedError();
   }
 }
 
@@ -172,5 +180,13 @@ class CompressedFileTypeInferencer extends AFileTypeInferencer {
       }
     }
     return Platform.unknown;
+  }
+
+  @override
+  Future<String> getOutputDirectory() async {
+    if (!_isInited) {
+      await init();
+    }
+    return outputDir.absolute.path;
   }
 }

@@ -1,9 +1,20 @@
-workingDirectory: 'workdir'
-urlList:
-  - 'https://developer.qiniu.com/kodo/6435/kodoimport'
-  - 'https://developer.qiniu.com/kodo/5972/kodo-browser'
-  - 'https://developer.qiniu.com/kodo/1302/qshell'
-userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36'
+working-directory: 'workdir'
+
+document-list:
+  - name: "kodo-import"
+    url: 'https://developer.qiniu.com/kodo/6435/kodoimport'
+    after-inferencer-checkers: [ ]
+
+
+  - name: "kodo-browser"
+    url: 'https://developer.qiniu.com/kodo/5972/kodo-browser'
+
+  - name: "qshell"
+    url: 'https://developer.qiniu.com/kodo/1302/qshell'
+    after-inferencer-checkers: [ 'qshellVersionChecker' ]
+
+user-agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36'
+
 logger:
-  level: 'WARN'
-  showStackTrace: false
+  level: 'INFO'
+  show-stack-trace: false

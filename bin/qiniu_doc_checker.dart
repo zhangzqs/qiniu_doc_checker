@@ -5,6 +5,42 @@ import 'package:intl/intl.dart';
 import 'package:qiniu_doc_checker/config.dart';
 import 'package:qiniu_doc_checker/logger.dart';
 import 'package:qiniu_doc_checker/qiniu_doc_checker.dart';
+import 'package:yaml/yaml.dart';
+
+import 'checkers/qshell_version_checker.dart';
+
+const Map<String, AfterInferencerCallback> afterInferencerCheckers = {
+  'qshellVersionChecker': qshellVersionChecker,
+};
+
+Future<QiniuDocumentCheckerConfiguration> loadConfigFromYamlFile(File file) async {
+  final content = await file.readAsString();
+  final yamlDoc = loadYaml(content);
+
+  return QiniuDocumentCheckerConfiguration(
+    workingDirectory: yamlDoc['working-directory'],
+    documentList: (yamlDoc['document-list'] as YamlList).toList().cast<YamlMap>().map((e) {
+      return QiniuDocument(
+        name: e['name'],
+        url: e['url'],
+        afterDownloadCheckers: ((e) =>
+            e == null ? <String>[] : (e as YamlList).map((x) => x.toString()).toList())(e['after-download-checkers']),
+        afterInferencerCheckers: ((e) =>
+            e == null ? <String>[] : (e as YamlList).map((x) => x.toString()).toList())(e['after-inferencer-checkers']),
+      );
+    }).toList(),
+    userAgent: yamlDoc['user-agent'],
+    logger: () {
+      final map = (yamlDoc['logger'] as YamlMap).cast<String, dynamic>();
+      return QiniuLoggerConfiguration(
+        level: LogLevel.values.firstWhere(
+          (e) => e.name.toUpperCase() == map['level'].toString().toUpperCase(),
+        ),
+        showStackTrace: map['show-stack-trace'],
+      );
+    }(),
+  );
+}
 
 Future<int> _run(List<String> arguments) async {
   String yamlConfigFile = await () async {
@@ -31,11 +67,15 @@ Future<int> _run(List<String> arguments) async {
 
   logger.i('使用配置文件: $yamlConfigFile');
 
-  final config = await QiniuDocumentCheckerConfiguration.fromYaml(yamlConfigFile);
+  final config = await loadConfigFromYamlFile(File(yamlConfigFile));
   logger.level = config.logger.level;
   logger.showStackTrace = config.logger.showStackTrace;
 
-  await QiniuDocumentsChecker(config).check();
+  await QiniuDocumentsChecker(
+    config: config,
+    afterInferencerCallbackMap: afterInferencerCheckers,
+    afterDownloadCallbackMap: {}, // TODO
+  ).check();
 
   final errorLogs = logger.logItems.where((e) => e.level == LogLevel.error).toList();
 

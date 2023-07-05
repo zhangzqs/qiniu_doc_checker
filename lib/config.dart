@@ -1,55 +1,43 @@
 import 'dart:io';
 
 import 'package:qiniu_doc_checker/logger.dart';
-import 'package:yaml/yaml.dart';
 
 class QiniuLoggerConfiguration {
   final LogLevel level;
   final bool showStackTrace;
 
-  QiniuLoggerConfiguration({
-    LogLevel? level,
-    bool? showStackTrace,
-  })  : level = level ?? LogLevel.info,
-        showStackTrace = showStackTrace ?? false;
+  const QiniuLoggerConfiguration({
+    this.level = LogLevel.info,
+    this.showStackTrace = false,
+  });
+}
+
+class QiniuDocument {
+  final String name;
+  final String url;
+  final List<String> afterDownloadCheckers;
+  final List<String> afterInferencerCheckers;
+
+  const QiniuDocument({
+    required this.name,
+    required this.url,
+    this.afterDownloadCheckers = const [],
+    this.afterInferencerCheckers = const [],
+  });
 }
 
 class QiniuDocumentCheckerConfiguration {
+  static const defaultUserAgent =
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4658.0 Safari/537.36';
   final String workingDirectory;
-  final List<String> urlList;
+  final List<QiniuDocument> documentList;
   final String userAgent;
   final QiniuLoggerConfiguration logger;
 
   QiniuDocumentCheckerConfiguration({
     String? workingDirectory,
-    List<String>? urlList,
-    String? userAgent,
-    QiniuLoggerConfiguration? logger,
-  })  : workingDirectory = (() {
-          final result = workingDirectory ?? '${Directory.current.path}/workdir';
-          return result;
-        })(),
-        urlList = urlList ?? [],
-        userAgent = userAgent ??
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4658.0 Safari/537.36',
-        logger = logger ?? QiniuLoggerConfiguration();
-
-  static Future<QiniuDocumentCheckerConfiguration> fromYaml(String yaml) async {
-    final content = await File(yaml).readAsString();
-    final yamlDoc = loadYaml(content);
-    return QiniuDocumentCheckerConfiguration(
-      workingDirectory: yamlDoc['workingDirectory'],
-      urlList: (yamlDoc['urlList'] as YamlList).toList().cast<String>(),
-      userAgent: yamlDoc['userAgent'],
-      logger: () {
-        final map = (yamlDoc['logger'] as YamlMap).cast<String, dynamic>();
-        return QiniuLoggerConfiguration(
-          level: LogLevel.values.firstWhere(
-            (e) => e.name.toUpperCase() == map['level'].toString().toUpperCase(),
-          ),
-          showStackTrace: map['showStackTrace'],
-        );
-      }(),
-    );
-  }
+    this.documentList = const [],
+    this.userAgent = defaultUserAgent,
+    this.logger = const QiniuLoggerConfiguration(),
+  }) : workingDirectory = workingDirectory ?? '${Directory.current.path}/workdir';
 }
