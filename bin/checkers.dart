@@ -20,7 +20,7 @@ void kodoImportVersionChecker({
   commonVersionChecker(
     'kodoimport',
     versionSubCommands: ['--version'],
-    expectRegex: r'version:v(\d+\.\d+\.\d+)',
+    expectRegex: r'^version:v(\d+\.\d+\.\d+)$',
     downloadUrl: downloadUrl,
     inferOutput: inferOutput,
     arch: arch,
