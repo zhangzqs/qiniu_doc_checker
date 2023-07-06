@@ -18,7 +18,7 @@ void kodoImportVersionChecker({
   required Platform platform,
 }) {
   commonVersionChecker(
-    'kodoimport',
+    './kodoimport',
     versionSubCommands: ['--version'],
     expectRegex: r'^version:v(\d+\.\d+\.\d+)$',
     downloadUrl: downloadUrl,
@@ -57,7 +57,7 @@ void qshellVersionChecker({
   required Platform platform,
 }) {
   commonVersionChecker(
-    'qshell',
+    './qshell',
     versionSubCommands: ['version'],
     downloadUrl: downloadUrl,
     inferOutput: inferOutput,
@@ -90,7 +90,6 @@ void commonVersionChecker(
   final version = Process.runSync(
     platform == Platform.windows ? '$executable.exe' : executable,
     versionSubCommands,
-    runInShell: true,
     workingDirectory: inferOutput,
   ).stdout.toString().trim();
   logger.i('$executable 版本号: $version');
