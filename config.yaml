@@ -3,11 +3,12 @@ working-directory: 'workdir'
 document-list:
   - name: "kodo-import"
     url: 'https://developer.qiniu.com/kodo/6435/kodoimport'
-    after-inferencer-checkers: [ ]
+    after-inferencer-checkers: [ 'kodoImportVersionChecker' ]
 
 
   - name: "kodo-browser"
     url: 'https://developer.qiniu.com/kodo/5972/kodo-browser'
+    after-inferencer-checkers: [ 'kodoBrowserVersionChecker' ]
 
   - name: "qshell"
     url: 'https://developer.qiniu.com/kodo/1302/qshell'

@@ -7,11 +7,7 @@ import 'package:qiniu_doc_checker/logger.dart';
 import 'package:qiniu_doc_checker/qiniu_doc_checker.dart';
 import 'package:yaml/yaml.dart';
 
-import 'checkers/qshell_version_checker.dart';
-
-const Map<String, AfterInferencerCallback> afterInferencerCheckers = {
-  'qshellVersionChecker': qshellVersionChecker,
-};
+import 'checkers.dart';
 
 Future<QiniuDocumentCheckerConfiguration> loadConfigFromYamlFile(File file) async {
   final content = await file.readAsString();
