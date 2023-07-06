@@ -73,17 +73,22 @@ Future<int> _run(List<String> arguments) async {
     afterDownloadCallbackMap: {}, // TODO
   ).check();
 
-  final errorLogs = logger.logItems.where((e) => e.level == LogLevel.error).toList();
+  final warnLogs = logger.logItems.where((e) => e.level == LogLevel.warn).toList();
+  if (warnLogs.isNotEmpty) {
+    print('\x1B[33m Some Warnings: \x1B[0m');
+    print('${warnLogs.join('\n')}\n');
+  }
 
+  final errorLogs = logger.logItems.where((e) => e.level == LogLevel.error).toList();
   if (errorLogs.isNotEmpty) {
     print('\x1B[31m Some Errors: \x1B[0m');
     print('${errorLogs.join('\n')}\n');
     return 1;
-  } else {
-    logger.level = LogLevel.info;
-    logger.i('\x1B[32m 所有文档检查均成功通过！！！ \x1B[0m');
-    return 0;
   }
+
+  logger.level = LogLevel.info;
+  logger.i('\x1B[32m 所有文档检查均成功通过！！！ \x1B[0m');
+  return 0;
 }
 
 Future<void> _writeAllPrintToLogFile(Iterable<String> printRecords) async {

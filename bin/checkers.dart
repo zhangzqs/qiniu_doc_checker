@@ -20,6 +20,7 @@ void kodoImportVersionChecker({
   commonVersionChecker(
     'kodoimport',
     versionSubCommands: ['--version'],
+    expectRegex: r'version:v(\d+\.\d+\.\d+)',
     downloadUrl: downloadUrl,
     inferOutput: inferOutput,
     arch: arch,
@@ -68,6 +69,7 @@ void qshellVersionChecker({
 void commonVersionChecker(
   String executable, {
   List<String> versionSubCommands = const ['version'],
+  String expectRegex = r'^v(\d+\.\d+\.\d+)$',
   required String downloadUrl,
   required String inferOutput,
   required Architecture arch,
@@ -93,14 +95,8 @@ void commonVersionChecker(
   ).stdout.toString().trim();
   logger.i('$executable 版本号: $version');
 
-  // 版本号格式为 vx.x.x
-  if (!version.startsWith('v')) {
-    logger.e('$executable 版本号格式不正确: $version');
-    return;
-  }
-  final versionNumber = version.substring(1);
-  if (!RegExp(r'^\d+\.\d+\.\d+$').hasMatch(versionNumber)) {
-    logger.e('$executable 版本号格式不正确: $version');
+  if (!RegExp(expectRegex).hasMatch(version)) {
+    logger.e('$executable 版本号格式不正确: $version, 期望格式为 $expectRegex');
     return;
   }
   if (!downloadUrl.contains(version)) {
